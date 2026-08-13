@@ -30,16 +30,16 @@ def normalize(text):
 
 def get_fixed_answer(user_message):
     q = normalize(user_message)
-
     # 1. Developer / Banaya kisne
-    if any(k in q for k in ["kisne banaya",  "kon bnaya h tumko" , "who created you" , "kon bnane wala kon h" , "who created", "who made", "who developed", "developer kaun", "developer kon"]):
-        return "Mujhe mere developer Ishaan ne create kiya hai. 🤖✨"
+    if any(k in q for k in ["kisne banaya", "kon bnaya", "who created", "who made", "who developed", "developer kaun", "developer kon", "banane wala kon"]):
         if any(k in q for k in ["kyun", "why"]):
             return "Mere developer ko technology aur AI ke saath experiment karna aur kuch naya create karna kaafi pasand hai. Unka interest isi field mein hai, isliye unhone socha ki kyun na apna khud ka AI agent banaya jaye. Aur wahi idea aage chalkar EVARA AI bana. 😄"
         elif any(k in q for k in ["kaise", "how"]):
             return "Ye main nahi bata sakti... 🤫 Top Secret! 😅🔐 Bas itna samajh lo ki mere developer ne kaafi mehnat ki hai. 😉"
         elif any(k in q for k in ["kab", "when"]):
             return "Mujhe haal hi mein, recently create kiya gaya hai. ✨"
+        else:
+            return "Mujhe mere developer Ishaan ne create kiya hai. 🤖✨"
 
 
     # 2. Name / Identity
@@ -162,7 +162,7 @@ def chat():
         else:
             return jsonify({"error": f"Model '{model_choice}' is not supported"}), 400
 
-        return jsonify({
+                return jsonify({
             "response": response_text,
             "model_used": model_choice
         }), 200
@@ -172,104 +172,3 @@ def chat():
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
-                best_score = score
-                best_answer = item["answer"]
-
-    if best_score >= 0.58:
-        return best_answer
-    return None
-
-@app.route("/", methods=["GET"])
-def home():
-    return jsonify({"status": "EVARA API is running live!"}), 200
-
-@app.route("/chat", methods=["POST"])
-def chat():
-    data = request.get_json()
-
-    if not data or "message" not in data:
-        return jsonify({"error": "Message required"}), 400
-
-    user_message = data["message"]
-    model_choice = data.get("model", "llama-3.3-70b")
-
-    fixed_answer = get_fixed_answer(user_message)
-    if fixed_answer:
-        return jsonify({
-            "response": fixed_answer,
-            "model_used": "evara-fixed-qa"
-        }), 200
-
-    try:
-        response_text = ""
-
-        if model_choice in ["llama-3.3-70b", "deepseek-r1", "mixtral-8x7b"]:
-            if not GROQ_API_KEY:
-                return jsonify({"error": "GROQ_API_KEY is missing on Render settings"}), 500
-
-            client = Groq(api_key=GROQ_API_KEY)
-            groq_model_map = {
-                "llama-3.3-70b": "llama-3.3-70b-versatile",
-                "deepseek-r1": "deepseek-r1-distill-llama-70b",
-                "mixtral-8x7b": "mixtral-8x7b-32768"
-            }
-            actual_model = groq_model_map.get(model_choice, "llama-3.3-70b-versatile")
-
-            completion = client.chat.completions.create(
-                model=actual_model,
-                messages=[{"role": "user", "content": user_message}]
-            )
-            response_text = completion.choices[0].message.content
-
-        elif model_choice == "gemini-2.0-flash":
-            if not GEMINI_API_KEY:
-                return jsonify({"error": "GEMINI_API_KEY is missing on Render settings"}), 500
-
-            genai.configure(api_key=GEMINI_API_KEY)
-            model = genai.GenerativeModel("gemini-1.5-flash")
-            response = model.generate_content(user_message)
-            response_text = response.text
-
-        elif model_choice in ["gpt-4o-mini", "qwen-2.5-coder", "claude-3.5-sonnet", "openrouter"]:
-            if not OPENROUTER_API_KEY:
-                return jsonify({"error": "OPENROUTER_API_KEY is missing on Render settings"}), 500
-
-            openrouter_map = {
-                "gpt-4o-mini": "openai/gpt-4o-mini",
-                "qwen-2.5-coder": "qwen/qwen-2.5-coder-32b-instruct",
-                "claude-3.5-sonnet": "anthropic/claude-3.5-sonnet",
-                "openrouter": "meta-llama/llama-3.3-70b-instruct:free"
-            }
-            actual_or_model = openrouter_map.get(model_choice, "meta-llama/llama-3.3-70b-instruct:free")
-
-            headers = {
-                "Authorization": f"Bearer {OPENROUTER_API_KEY}",
-                "Content-Type": "application/json"
-            }
-            payload = {
-                "model": actual_or_model,
-                "messages": [{"role": "user", "content": user_message}]
-            }
-
-            res = requests.post("https://openrouter.ai/api/v1/chat/completions", headers=headers, json=payload)
-            res_data = res.json()
-
-            if "choices" in res_data and len(res_data["choices"]) > 0:
-                response_text = res_data["choices"][0]["message"]["content"]
-            else:
-                return jsonify({"error": "OpenRouter Error", "details": res_data}), 500
-
-        else:
-            return jsonify({"error": f"Model '{model_choice}' is not supported"}), 400
-
-        return jsonify({
-            "response": response_text,
-            "model_used": model_choice
-        }), 200
-
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000)
-    
