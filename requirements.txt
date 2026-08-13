@@ -1,6 +1,6 @@
 flask
 flask-cors
-gunicorn
+requests
 groq
 google-generativeai
-requests
+gunicorn
