@@ -119,10 +119,10 @@ def chat():
 
             client = Groq(api_key=GROQ_API_KEY)
             groq_model_map = {
-                "llama-3.3-70b": "llama-3.3-70b-versatile",
-                "deepseek-r1": "deepseek-r1-distill-llama-70b",
-                "mixtral-8x7b": "mixtral-8x7b-32768"
-            }
+    "llama-3.3-70b": "llama-3.3-70b-versatile",
+    "deepseek-r1": "deepseek-r1-distill-llama-70b",
+    "mixtral-8x7b": "llama3-8b-8192"  # Mixtral band ho chuka hai, iski jagah Llama3 8B daalein
+}
             actual_model = groq_model_map.get(model_choice, "llama-3.3-70b-versatile")
 
             completion = client.chat.completions.create(
