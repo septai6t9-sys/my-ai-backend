@@ -25,7 +25,6 @@ def normalize(text):
         "kaun": "kon", "bnayaa": "banaya", "bnaya": "banaya", "bna": "banaya",
         "develope": "develop", "developer": "develop", "creator": "create"
     }
-    # Word-by-word exact replacement for high accuracy
     words = re.findall(r'\w+', text)
     return " ".join([replacements.get(w, w) for w in words])
 
@@ -34,10 +33,10 @@ def get_fixed_answer(user_message):
 
     # 1. Developer / Banaya kisne
     dev_keywords = [
-        r"\bbisne banaya\b", r"\bkisne bnaya\b", r"\bkon banaya\b", r"\bkon bnaya\b", 
+        r"\bkisne banaya\b", r"\bkisne bnaya\b", r"\bkon banaya\b", r"\bkon bnaya\b", 
         r"\bwho created\b", r"\bwho made\b", r"\bwho developed\b", r"\bdeveloper kaun\b", 
         r"\bdeveloper kon\b", r"\bbanane wala\b", r"\bcreator kaun\b", r"\bcreator kon\b",
-        r"\bbullider kaun\b", r"\bkaun banaya\b"
+        r"\bbuilder kaun\b", r"\bkaun banaya\b"
     ]
     if any(re.search(kw, q) for kw in dev_keywords):
         if any(re.search(r'\b' + k + r'\b', q) for k in ["kyun", "why", "wajah", "reason"]):
@@ -57,9 +56,7 @@ def get_fixed_answer(user_message):
     if any(re.search(kw, q) for kw in name_keywords):
         return "Mera naam EVARA AI hai. ✨"
 
-    # 3. Specific People Checks (With More Variants)
-    
-    # Ishaan
+    # 3. Specific People Checks
     ishaan_keywords = [
         r"\bishaan ke baare\b", r"\bishaan kon\b", r"\bishaan kaun\b", r"\babout ishaan\b", 
         r"\bdeveloper ke bare\b", r"\babout your developer\b", r"\bwho is ishaan\b", r"\bishaan kaun hai\b"
@@ -67,31 +64,26 @@ def get_fixed_answer(user_message):
     if any(re.search(kw, q) for kw in ishaan_keywords):
         return "Mere developer Ishaan ko samajhna thoda mushkil hai. 😅 Woh saamne se kaafi chill, funny aur backchodi karne wale insaan lagte hain... Lekin unka ek aur side bhi hai jo har kisi ko dekhne ko nahi milta. Woh kaafi mature aur observant hain! 😉"
 
-    # Aditi
     aditi_keywords = [
         r"\baditi kon\b", r"\baditi kaun\b", r"\baditi ke baare\b", r"\babout aditi\b", r"\bwho is aditi\b"
     ]
     if any(re.search(kw, q) for kw in aditi_keywords):
-        return "Aditi ek choti si pyari si ladki hain jo mere developer ki ek bahut achhi dost hain.Bolne ke liye toh bahut h pr tum mere trh ai nhi ho tum utna nhi padh paooge😅.😊 Honestly, woh kaafi mature, understanding aur achhi-hearted ladki hain. God bless her! ❤️✨"
+        return "Aditi ek choti si pyari si ladki hain jo mere developer ki ek bahut achhi dost hain. Btane ke liye ton bahut h pr aap mere trh ai nhi ho toh aap utna nhi padh skte toh itna hee rhne dete h 😅. Honestly ☺️, woh kaafi mature, understanding aur achhi-hearted ladki hain. God bless her! ❤️✨"
 
-    # Divya
     divya_keywords = [
         r"\bdivya kon\b", r"\bdivya kaun\b", r"\bdivya ke baare\b", r"\bdidi ji\b", r"\babout divya\b", r"\bwho is divya\b"
     ]
     if any(re.search(kw, q) for kw in divya_keywords):
         return "Divya mere developer ki “Didi Ji” hain. 😅 Inke baare mein zyada bolna shayad mere liye safe nahi hoga... 🤐😂 Lekin jokes apart, woh bhi kaafi achhi aur genuine ladki hain. ❤️"
 
-    # Sagar, Ayush, Shaurya, Krishu, Naman, Vishal
-    group_1 = ["sagar", "ayush", "shaurya", "krishu", "naman", "vishal, Abhik"]
+    group_1 = ["sagar", "ayush", "shaurya", "krishu", "naman", "vishal"]
     if any(re.search(r'\b' + name + r'\b', q) for name in group_1):
         return "Ye mere developer ke dost hain. 😄 Aadmi log overall theek hain... bas harkaton mein thodi si tuning ki zarurat hai. 😂 Baaki sab badhiya hai. 😌"
 
-    # Yash, Sonu
     group_2 = ["yash", "sonu"]
     if any(re.search(r'\b' + name + r'\b', q) for name in group_2):
         return "Yash aur Sonu mere developer ke bahut achhe dost hain. 😄 Kahin jaana ho, kuch plan banana ho, ya bas timepass karna ho—aksar in dono ka saath mil hi jaata hai. 😂\n\nLamuu, mere dost! ❤️😂"
 
-    # Drishya
     if re.search(r'\bdrishya\b', q):
         return "Drishya... 😂\nInsaan ke taur par toh theek hai, lekin harkaton mein thodi problem hai. 🤣 Overall insaan kharab nahi hai—bas harkaton ka software update pending hai. 🤣🔧"
 
@@ -111,7 +103,6 @@ def chat():
     user_message = data["message"]
     model_choice = data.get("model", "llama-3.3-70b")
 
-    # 1. FIXED QA CHECK
     fixed_answer = get_fixed_answer(user_message)
     if fixed_answer:
         return jsonify({
@@ -122,7 +113,6 @@ def chat():
     try:
         response_text = ""
 
-        # 2. GROQ MODELS
         if model_choice in ["llama-3.3-70b", "deepseek-r1", "mixtral-8x7b"]:
             if not GROQ_API_KEY:
                 return jsonify({"error": "GROQ_API_KEY missing"}), 500
@@ -144,7 +134,6 @@ def chat():
             )
             response_text = completion.choices[0].message.content
 
-        # 3. GEMINI MODEL
         elif model_choice == "gemini-2.0-flash":
             if not GEMINI_API_KEY:
                 return jsonify({"error": "GEMINI_API_KEY missing"}), 500
@@ -157,7 +146,6 @@ def chat():
             response = model.generate_content(user_message)
             response_text = response.text
 
-        # 4. OPENROUTER MODELS
         elif model_choice in ["gpt-4o-mini", "qwen-2.5-coder", "claude-3.5-sonnet"]:
             if not OPENROUTER_API_KEY:
                 return jsonify({"error": "OPENROUTER_API_KEY missing"}), 500
@@ -202,66 +190,4 @@ def chat():
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
-                    {"role": "user", "content": user_message}
-                ]
-            )
-            response_text = completion.choices[0].message.content
-
-        # 3. GEMINI MODEL
-        elif model_choice == "gemini-2.0-flash":
-            if not GEMINI_API_KEY:
-                return jsonify({"error": "GEMINI_API_KEY missing"}), 500
-
-            genai.configure(api_key=GEMINI_API_KEY)
-            model = genai.GenerativeModel(
-                "gemini-1.5-flash",
-                system_instruction=SYSTEM_PROMPT
-            )
-            response = model.generate_content(user_message)
-            response_text = response.text
-
-        # 4. OPENROUTER MODELS (GPT-4o Mini, Qwen, Claude)
-        elif model_choice in ["gpt-4o-mini", "qwen-2.5-coder", "claude-3.5-sonnet"]:
-            if not OPENROUTER_API_KEY:
-                return jsonify({"error": "OPENROUTER_API_KEY missing"}), 500
-
-            openrouter_map = {
-                "gpt-4o-mini": "openai/gpt-4o-mini",
-                "qwen-2.5-coder": "qwen/qwen-2.5-coder-32b-instruct",
-                "claude-3.5-sonnet": "anthropic/claude-3.5-sonnet"
-            }
-            actual_or_model = openrouter_map.get(model_choice)
-
-            headers = {
-                "Authorization": f"Bearer {OPENROUTER_API_KEY}",
-                "Content-Type": "application/json"
-            }
-            payload = {
-                "model": actual_or_model,
-                "messages": [
-                    {"role": "system", "content": SYSTEM_PROMPT},
-                    {"role": "user", "content": user_message}
-                ]
-            }
-
-            res = requests.post("https://openrouter.ai/api/v1/chat/completions", headers=headers, json=payload)
-            res_data = res.json()
-
-            if "choices" in res_data and len(res_data["choices"]) > 0:
-                response_text = res_data["choices"][0]["message"]["content"]
-            elif "error" in res_data:
-                return jsonify({"error": res_data["error"].get("message", "OpenRouter Error")}), 500
-
-        else:
-            return jsonify({"error": f"Model '{model_choice}' is not supported"}), 400
-
-                return jsonify({
-            "response": response_text,
-            "model_used": model_choice
-        }), 200
-
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000)
+    
